@@ -1,21 +1,47 @@
-SELECT GENPACIEN.pacnumdoc HISTORIA,GENPACIEN.GPANOMCOM NOMBRES,hcacodigo CAMA,hsunombre SERVICIO,
-CONVERT(CHAR(10),AINFECING,103) FECHA_INGRESO,
-CONVERT(CHAR(10),AINFECING,108) HORA_INGRESO,
-datediff(day,ainfecing,getdate())   [DIAS ESTANCIA],
-
- (select TOP 1 DIACODIGO from hcnfolio inner join hcndiapac on hcndiapac.hcnfolio = hcnfolio.oid inner join gendiagno on gendiagno.oid = hcndiapac.gendiagno 
-						 where hcnfolio.adningreso =  adningreso.oid AND HCPDIAPRIN= 1 ORDER BY HCNDIAPAC.OID DESC) CIE10,
-						 (select TOP 1 DIANOMBRE from hcnfolio inner join hcndiapac on hcndiapac.hcnfolio = hcnfolio.oid inner join gendiagno on gendiagno.oid = hcndiapac.gendiagno 
-						 where hcnfolio.adningreso =  adningreso.oid AND HCPDIAPRIN= 1 ORDER BY HCNDIAPAC.OID DESC) DIAGNOSTICO,munnommun MUNICIPIO,gdenombre EPS
-FROM adningreso
-inner join hpnestanc  on adningreso.oid = hpnestanc.adningres and hesfecsal is null 
-inner join hpndefcam on hpndefcam.oid = adningreso.hpndefcam
-inner join hpnsubgru on hpnsubgru.oid = hpndefcam.hpnsubgru
-inner join genpacien on genpacien.oid =  adningreso.genpacien
-inner join genmunici on genmunici.oid =  genpacien.DGNMUNICIPIO
-inner join gendetcon on gendetcon.oid =  adningreso.gendetcon
-WHERE ainestado in (0)
---and gdenombre like '%EMSS%'
-group by  GENPACIEN.pacnumdoc,GENPACIEN.GPANOMCOM,hcacodigo,hsunombre,
-AINFECING,munnommun,gdenombre,ADNINGRESO.OID
-order by ainfecing
+WITH cte AS (
+    SELECT
+        gp.pacnumdoc                                    AS HISTORIA,
+        gp.gpanomcom                                    AS NOMBRES,
+        dc.hcacodigo                                    AS CAMA,
+        sg.hsunombre                                    AS SERVICIO,
+        a.ainfecing                                     AS FECHA_INGRESO_RAW,
+        CONVERT(CHAR(10), a.ainfecing, 103)             AS FECHA_INGRESO,
+        CONVERT(CHAR(8),  a.ainfecing, 108)             AS HORA_INGRESO,
+        DATEDIFF(DAY, a.ainfecing, GETDATE())           AS DIAS_ESTANCIA,
+        g.diacodigo                                     AS CIE10,
+        g.dianombre                                     AS DIAGNOSTICO,
+        mu.munnommun                                    AS MUNICIPIO,
+        det.gdenombre                                   AS EPS,
+        f.HCFECFOL                                      AS HCFECFOL_FULL,
+        FORMAT(f.HCFECFOL, 'yyyy-MM-dd hh:mm', 'es-co') AS FECHA_FOLIO,
+        ROW_NUMBER() OVER (
+            PARTITION BY gp.pacnumdoc
+            ORDER BY f.HCFECFOL DESC
+        ) AS rn
+    FROM adningreso a
+    INNER JOIN hpnestanc he  ON a.oid = he.adningres AND he.hesfecsal IS NULL
+    INNER JOIN hpndefcam dc  ON dc.oid = a.hpndefcam
+    INNER JOIN hpnsubgru sg  ON sg.oid = dc.hpnsubgru
+    INNER JOIN genpacien gp  ON gp.oid = a.genpacien
+    INNER JOIN genmunici mu  ON mu.oid = gp.DGNMUNICIPIO
+    INNER JOIN gendetcon det  ON det.oid = a.gendetcon
+    INNER JOIN hcnfolio f    ON f.adningreso = a.oid
+    INNER JOIN hcndiapac dp  ON dp.hcnfolio = f.oid
+    INNER JOIN gendiagno g   ON g.oid = dp.gendiagno
+    WHERE a.ainestado IN (0)
+)
+SELECT
+    HISTORIA,
+    NOMBRES,
+    CAMA,
+    SERVICIO,
+    FECHA_INGRESO,
+    HORA_INGRESO,
+    DIAS_ESTANCIA,
+    CIE10,
+    DIAGNOSTICO,
+    MUNICIPIO,
+    EPS
+FROM cte
+WHERE rn = 1
+ORDER BY FECHA_INGRESO_RAW DESC;
