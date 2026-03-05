@@ -1,9 +1,12 @@
+USE DGEMPRES50;
+GO
+
 SET DATEFORMAT ymd;
 DECLARE @FechaInicio DATETIME;
 DECLARE @FechaFinal DATETIME;
 
-SET @FechaInicio = '2026-01-27 00:00:00';
-SET @FechaFinal = '2026-01-27 23:59:59';
+SET @FechaInicio = '2026-02-27 00:00:00';
+SET @FechaFinal = '2026-02-28 23:59:59';
 
 -- NOTAS OPERATORIAS --
 

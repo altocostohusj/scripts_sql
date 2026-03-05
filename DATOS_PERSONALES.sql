@@ -1,3 +1,6 @@
+use DGEMPRES50;
+go
+
 SELECT DISTINCT
 DATEDIFF(YEAR, GENPACIEN.GPAFECNAC, ADNINGRESO.AINFECING) - CASE WHEN (MONTH(GENPACIEN.GPAFECNAC) > MONTH(ADNINGRESO.AINFECING) OR  (MONTH(GENPACIEN.GPAFECNAC) = MONTH(ADNINGRESO.AINFECING) AND DAY(GENPACIEN.GPAFECNAC) > DAY(ADNINGRESO.AINFECING))) THEN 1 ELSE 0 END AS A_A_EDAD,
 		GEENENTADM.ENTCODIGO AS AF_COD_EAPB, GEENENTADM.ENTNOMBRE AS AF_ENTIDAD,
@@ -16,57 +19,18 @@ DATEDIFF(YEAR, GENPACIEN.GPAFECNAC, ADNINGRESO.AINFECING) - CASE WHEN (MONTH(GEN
         CASE GENPACIEN.PACTIPDOC WHEN 1 THEN 'CC' WHEN 2 THEN 'CE' WHEN 3 THEN 'TI' WHEN 4 THEN 'RC' WHEN 5 THEN 'PA' WHEN 6 THEN 'AS' WHEN 7 THEN 'MS' WHEN 8 THEN 'NU' WHEN 10 THEN 'CN' WHEN 12 THEN 'PE' WHEN 14 THEN 'PE' WHEN 15 THEN 'PE' WHEN 9 THEN 'PE'
         ELSE 'NONE' END AS A_3_TIPODOC,
         GENPACIEN.PACNUMDOC AS A_4_Número,
-        CASE WHEN TRIM(GENPACIEN.PACPRIAPE) = '' THEN 'NONE'
-            ELSE
-                REPLACE(
-                    TRANSLATE(
-                        TRIM(GENPACIEN.PACPRIAPE), 
-                        'áéíóúÁÉÍÓÚñÑ', 
-                        'aeiouAEIOUNN'
-                    ),
-                    ' ', 
-                    ''
-                )
-        END AS A_5_APELLIDO1,
-        CASE 
-            WHEN TRIM(GENPACIEN.PACSEGAPE) = '' THEN 'NONE'
-            ELSE
-                REPLACE(
-                    TRANSLATE(
-                        TRIM(GENPACIEN.PACSEGAPE), 
-                        'áéíóúÁÉÍÓÚñÑ', 
-                        'aeiouAEIOUNN'
-                    ),
-                    ' ', 
-                    ''
-                )
-        END AS A_6_APELLIDO2,
-        CASE 
-            WHEN TRIM(GENPACIEN.PACPRINOM) = '' THEN 'NONE'
-            ELSE
-                REPLACE(
-                    TRANSLATE(
-                        TRIM(GENPACIEN.PACPRINOM), 
-                        'áéíóúÁÉÍÓÚñÑ', 
-                        'aeiouAEIOUNN'
-                    ),
-                    ' ', 
-                    ''
-                )
-        END AS A_7_NOMBRE1,
-        CASE 
-            WHEN TRIM(GENPACIEN.PACSEGNOM) = '' THEN 'NONE'
-            ELSE
-                REPLACE(
-                    TRANSLATE(
-                        TRIM(GENPACIEN.PACSEGNOM), 
-                        'áéíóúÁÉÍÓÚñÑ', 
-                        'aeiouAEIOUNN'
-                    ),
-                    ' ', 
-                    ''
-                )
-        END AS A_8_NOMBRE1,
+        TRANSLATE(
+    TRIM(
+        CONCAT(
+            ISNULL(NULLIF(TRIM(GENPACIEN.PACPRIAPE), ''), 'NONE'), ' ',
+            ISNULL(NULLIF(TRIM(GENPACIEN.PACSEGAPE), ''), 'NONE'), ' ',
+            ISNULL(NULLIF(TRIM(GENPACIEN.PACPRINOM), ''), 'NONE'), ' ',
+            ISNULL(NULLIF(TRIM(GENPACIEN.PACSEGNOM), ''), 'NONE')
+        )
+    ),
+    'áéíóúÁÉÍÓÚñÑ',
+    'aeiouAEIOUNN'
+) AS NOMBRE_COMPLETO,
         FORMAT(GENPACIEN.GPAFECNAC, 'yyyy-MM-dd', 'en-us') AS A_9_NACIMIENTO,
         CASE WHEN GENPACIEN.GPASEXPAC = 1 THEN 'M' WHEN GENPACIEN.GPASEXPAC = 2 THEN 'F' ELSE NULL END AS A_10_SEXO,
         CASE WHEN ADNGRUETN.ADGECODIGO IS NULL THEN 6
@@ -116,7 +80,7 @@ DATEDIFF(YEAR, GENPACIEN.GPAFECNAC, ADNINGRESO.AINFECING) - CASE WHEN (MONTH(GEN
 		LEFT JOIN GEENENTADM ON GENCONTRA.DGNENTADM1 = GEENENTADM.OID
 
         -- filtros
-        WHERE GENPACIEN.PACNUMDOC = '1118471411'
+        --WHERE GENPACIEN.PACNUMDOC = '1061764819'
+
 		
-		
-		-- WHERE GENPACIEN.PACNUMDOC IN 
+		WHERE GENPACIEN.PACNUMDOC IN ('1002953650')
